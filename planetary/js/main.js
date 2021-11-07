@@ -1,21 +1,16 @@
 const G = 0.005;
 
+/* Calculate distance between two bodies. */
 function distance(a, b) {
-  const sqrt = Math.sqrt;
-  const pow = Math.pow;
-  return sqrt(pow(a.position.x - b.position.x, 2)
-            + pow(a.position.y - b.position.y, 2)
-            + pow(a.position.z - b.position.z, 2));
+  return Math.sqrt(Math.pow(a.position.x - b.position.x, 2)
+                 + Math.pow(a.position.y - b.position.y, 2)
+                 + Math.pow(a.position.z - b.position.z, 2));
 }
 
-function gforce(a, b) {
-  const pow = Math.pow;
-  return G * ((a.mass + b.mass) / pow(distance(a, b), 2));
-}
-
+/* Calculate force vector between two bodies. */
 function gvector(a, b) {
-  const force = gforce(a, b);
   const dist = distance(a, b);
+	const force = G * ((a.mass + b.mass) / Math.pow(dist, 2));
   return {
     x: ((a.position.x - b.position.x) / dist) * force,
     y: ((a.position.y - b.position.y) / dist) * force,
@@ -23,37 +18,24 @@ function gvector(a, b) {
   };
 }
 
-class body {
-  constructor(mass, scene) {
+class Body {
+  constructor(size, mass, scene) {
+    this.size = size;
     this.mass = mass;
 
-    this.trail = [];
     this.scene = scene;
 
-    this.radius = 0;
+		this.step = 0;
 
+    this.position     = { x: 0, y: 0, z: 0 };
+    this.velocity     = { x: 0, y: 0, z: 0 };
+    this.acceleration = { x: 0, y: 0, z: 0 };
+
+    this.trail = [];
     const geometry = new THREE.BufferGeometry().setFromPoints(this.trail);
     const material = new THREE.LineBasicMaterial({ color: 0x0000ff });
     this.line = new THREE.Line(geometry, material);
     scene.add(this.line)
-
-    this.position = {
-      x: 0,
-      y: 0,
-      z: 0,
-    };
-
-    this.velocity = {
-      x: 0,
-      y: 0,
-      z: 0,
-    };
-
-    this.acceleration = {
-      x: 0,
-      y: 0,
-      z: 0,
-    };
   }
 
   update() {
@@ -64,23 +46,20 @@ class body {
     this.position.y += this.velocity.y;
     this.position.z += this.velocity.z;
 
-    this.scene.remove(this.line);
-    this.trail.push({
-      x: this.position.x,
-      y: this.position.y,
-      z: this.position.z,
-    })
+		this.step += 1;
+		if (!(this.step % 5)) {
+			this.scene.remove(this.line);
+			this.trail.push({ x: this.position.x, y: this.position.y, z: this.position.z })
+			if (this.trail.length > 200) {
+				this.trail.shift();
+			}
+			this.scene.remove(this.line);
+			const geometry = new THREE.BufferGeometry().setFromPoints(this.trail);
+			const material = new THREE.LineBasicMaterial({ color: 0x0000ff });
+			this.line = new THREE.Line(geometry, material);
 
-    if (this.trail.length > 1000) {
-      this.trail.shift();
-    }
-
-    this.scene.remove(this.line);
-    const geometry = new THREE.BufferGeometry().setFromPoints(this.trail);
-    const material = new THREE.LineBasicMaterial({ color: 0x0000ff });
-    this.line = new THREE.Line(geometry, material);
-
-    this.scene.add(this.line);
+			this.scene.add(this.line);
+		}
   }
 
   collide(other) {
@@ -88,18 +67,19 @@ class body {
       console.log('collision!');
     }
   }
+
+	destroy() {
+	}
 }
 
-class planet extends body {
-  constructor(mass, scene) {
-    super(mass, scene);
-
-    this.radius = this.mass * 10
+class Planet extends Body {
+  constructor(size, mass, scene) {
+    super(size, mass, scene);
 
     let that = this;
     var loader = new THREE.TextureLoader();
-    loader.load('http://localhost:8080/img/mars.jpg', function (texture) {
-      that.geometry = new THREE.SphereGeometry(that.radius, 32, 16);
+    loader.load('/img/mars.jpg', function (texture) {
+      that.geometry = new THREE.SphereGeometry(that.size, 32, 16);
       that.material = new THREE.MeshPhongMaterial({ map: texture, color: 0xffffff });
       that.sphere = new THREE.Mesh(that.geometry, that.material);
       that.sphere.receiveShadow = true;
@@ -108,43 +88,52 @@ class planet extends body {
     })
   }
 
-  update () {
+  update() {
     super.update();
     if (this.sphere) {
       this.sphere.position.x = this.position.x;
       this.sphere.position.y = this.position.y;
       this.sphere.position.z = this.position.z;
+			this.sphere.rotation.y += 0.3;
     }
   }
+
+	destroy() {
+		super.destroy()
+		this.scene.remove(this.sphere);
+	}
 }
 
-class star extends body {
-  constructor(mass, scene) {
-    super(mass, scene);
-
-    this.radius = this.mass
+class Star extends Body {
+  constructor(size, mass, scene) {
+    super(size, mass, scene);
 
     let that = this;
     var loader = new THREE.TextureLoader();
-    loader.load('http://localhost:8080/img/sun.jpg', function (texture) {
-      const sphere = new THREE.SphereGeometry(that.radius, 32, 16);
+    loader.load('/img/sun.jpg', function (texture) {
+      const sphere = new THREE.SphereGeometry(that.size, 32, 16);
       that.light = new THREE.PointLight(0xffffff, 1.5);
       that.light.add(new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({ map: texture, color: 0xffffff })));
       that.light.position.set(0, 0, 0);
       that.light.castShadow = true;
       scene.add(that.light);
     })
-
   }
 
-  update () {
+  update() {
     super.update();
     if (this.light) {
       this.light.position.x = this.position.x;
       this.light.position.y = this.position.y;
       this.light.position.z = this.position.z;
+			this.light.rotation.y += 0.002;
     }
   }
+
+	destroy() {
+		super.destroy()
+		this.scene.remove(this.light);
+	}
 };
 
 const scene = new THREE.Scene();
@@ -159,18 +148,22 @@ document.body.appendChild(renderer.domElement);
 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 
-const bodies = [];
+// Let's setup our solar system. Ugly but it works.
+// Should we calculate size and mass based on density?
+// What about procedurally generated planets using perlin noise?
+// Load real data from our solar system?
+const bodies = [
+	new Star  (5.0, 100, scene),
+	new Planet(0.8,   1, scene),
+	new Planet(0.8,   1, scene),
+	new Planet(0.8,   1, scene),
+	new Planet(0.8,   1, scene),
+];
 
-bodies.push(new star  (5, scene));
-bodies.push(new planet(0.1, scene));
-bodies.push(new planet(0.1, scene));
-bodies.push(new planet(0.1, scene));
-bodies.push(new planet(0.1, scene));
-
-const a = bodies[1]; a.velocity.z = -0.10; a.position.x = 25; a.position.y =  7;
-const b = bodies[2]; b.velocity.x =  0.10; b.position.z = 35; b.position.y =  2;
-const c = bodies[3]; c.velocity.z = -0.07; c.position.x = 50; c.position.y =  7;
-const d = bodies[4]; d.velocity.x =  0.05; d.position.z = 50; d.position.y = -3;
+_ = bodies[1]; _.velocity.z = -0.10; _.position.x = 25; _.position.y =  7;
+_ = bodies[2]; _.velocity.x =  0.10; _.position.z = 35; _.position.y =  2;
+_ = bodies[3]; _.velocity.z = -0.07; _.position.x = 50; _.position.y =  7;
+_ = bodies[4]; _.velocity.x =  0.05; _.position.z = 50; _.position.y = -3;
 
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -183,7 +176,7 @@ window.addEventListener("resize", onWindowResize);
 function animate() {
   requestAnimationFrame(animate);
 
-  // calculate all combinations and iterate through them
+  // calculate all combinations and iterate through them, thanks StackOverflow
   bodies.flatMap((v, i) => bodies.slice(i + 1).map(w => [v, w])).forEach((i) => {
     const a = i[0];
     const b = i[1];
