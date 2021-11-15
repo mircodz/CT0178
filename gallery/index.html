@@ -1,0 +1,115 @@
+<html>
+  <head>
+    <title>Galleria Jquery</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <style>
+      body {
+        width: 100%;
+        margin: 0;
+        overflow-x: hidden;
+      }
+
+      .container {
+        height: 500px;
+        margin: auto;
+        padding: 1em;
+      }
+
+      .container img {
+        height: 100%;
+        margin: auto;
+      }
+
+      .faderight {
+        -webkit-animation-name: faderight;
+        -webkit-animation-duration: 0.7s;
+        animation-name: faderight;
+        animation-duration: 0.7s;
+      }
+
+      @keyframes faderight {
+        from {
+          opacity: 0.1;
+          transform: translatex(200vh);
+        }
+
+        to {
+          opacity: 1;
+        }
+      }
+
+      .fadeleft {
+        -webkit-animation-name: fadeleft;
+        -webkit-animation-duration: 0.7s;
+        animation-name: fadeleft;
+        animation-duration: 0.7s;
+      }
+
+      @keyframes fadeleft {
+        from {
+          opacity: 0.1;
+          transform: translatex(-200vh);
+        }
+
+        to {
+          opacity: 1;
+        }
+      }
+
+      .controls {
+        display: flex;
+        width: 50%;
+        margin: auto;
+      }
+
+      .controls button {
+        flex: 1;
+        padding: 1em;
+      }
+    </style>
+  </head>
+  <body>
+    <img src="flower1.jpg" />
+    <img src="flower2.jpg" />
+    <img src="flower3.jpg" />
+    <img src="flower4.jpg" />
+    <button id="prevbutton">Prev</button>
+    <button id="nextbutton">Next</button>
+    <script>
+      $("img").wrapAll('<div class="container"></div>');
+      $("button").wrapAll('<div class="controls"></div>');
+      $("img").css('display', 'none');
+
+      let begin = $("img").first();
+      let end = $("img").last();
+      let current = begin;
+
+      function stepforewards() {
+        current.css('display', 'none');
+        current = current.next();
+        if (current.length == 0) {
+          current = begin;
+        }
+        current.removeClass('fadeleft')
+        current.addClass('faderight')
+        current.css('display', 'block');
+      }
+
+      function stepbackwards() {
+        current.css('display', 'none');
+        current = current.prev();
+        if (current.length == 0) {
+          current = end;
+        }
+        current.removeClass('faderight')
+        current.addClass('fadeleft')
+        current.css('display', 'block');
+      }
+
+      $("#prevbutton").click(stepbackwards);
+      $("#nextbutton").click(stepforewards);
+
+      stepforewards()
+    </script>
+  </body>
+</html>
