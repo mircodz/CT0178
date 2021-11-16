@@ -10,7 +10,7 @@ function distance(a, b) {
 /* Calculate force vector between two bodies. */
 function gvector(a, b) {
   const dist = distance(a, b);
-	const force = G * ((a.mass + b.mass) / Math.pow(dist, 2));
+  const force = G * ((a.mass + b.mass) / Math.pow(dist, 2));
   return {
     x: ((a.position.x - b.position.x) / dist) * force,
     y: ((a.position.y - b.position.y) / dist) * force,
@@ -25,7 +25,7 @@ class Body {
 
     this.scene = scene;
 
-		this.step = 0;
+    this.step = 0;
 
     this.position     = { x: 0, y: 0, z: 0 };
     this.velocity     = { x: 0, y: 0, z: 0 };
@@ -46,20 +46,20 @@ class Body {
     this.position.y += this.velocity.y;
     this.position.z += this.velocity.z;
 
-		this.step += 1;
-		if (!(this.step % 5)) {
-			this.scene.remove(this.line);
-			this.trail.push({ x: this.position.x, y: this.position.y, z: this.position.z })
-			if (this.trail.length > 200) {
-				this.trail.shift();
-			}
-			this.scene.remove(this.line);
-			const geometry = new THREE.BufferGeometry().setFromPoints(this.trail);
-			const material = new THREE.LineBasicMaterial({ color: 0x0000ff });
-			this.line = new THREE.Line(geometry, material);
+    this.step += 1;
+    if (!(this.step % 5)) {
+      this.scene.remove(this.line);
+      this.trail.push({ x: this.position.x, y: this.position.y, z: this.position.z })
+      if (this.trail.length > 200) {
+        this.trail.shift();
+      }
+      this.scene.remove(this.line);
+      const geometry = new THREE.BufferGeometry().setFromPoints(this.trail);
+      const material = new THREE.LineBasicMaterial({ color: 0x0000ff });
+      this.line = new THREE.Line(geometry, material);
 
-			this.scene.add(this.line);
-		}
+      this.scene.add(this.line);
+    }
   }
 
   collide(other) {
@@ -68,8 +68,8 @@ class Body {
     }
   }
 
-	destroy() {
-	}
+  destroy() {
+  }
 }
 
 class Planet extends Body {
@@ -94,14 +94,14 @@ class Planet extends Body {
       this.sphere.position.x = this.position.x;
       this.sphere.position.y = this.position.y;
       this.sphere.position.z = this.position.z;
-			this.sphere.rotation.y += 0.3;
+      this.sphere.rotation.y += 0.3;
     }
   }
 
-	destroy() {
-		super.destroy()
-		this.scene.remove(this.sphere);
-	}
+  destroy() {
+    super.destroy()
+    this.scene.remove(this.sphere);
+  }
 }
 
 class Star extends Body {
@@ -126,14 +126,14 @@ class Star extends Body {
       this.light.position.x = this.position.x;
       this.light.position.y = this.position.y;
       this.light.position.z = this.position.z;
-			this.light.rotation.y += 0.002;
+      this.light.rotation.y += 0.002;
     }
   }
 
-	destroy() {
-		super.destroy()
-		this.scene.remove(this.light);
-	}
+  destroy() {
+    super.destroy()
+    this.scene.remove(this.light);
+  }
 };
 
 const scene = new THREE.Scene();
@@ -153,11 +153,11 @@ const controls = new THREE.OrbitControls(camera, renderer.domElement);
 // What about procedurally generated planets using perlin noise?
 // Load real data from our solar system?
 const bodies = [
-	new Star  (5.0, 100, scene),
-	new Planet(0.8,   1, scene),
-	new Planet(0.8,   1, scene),
-	new Planet(0.8,   1, scene),
-	new Planet(0.8,   1, scene),
+  new Star  (5.0, 100, scene),
+  new Planet(0.8,   1, scene),
+  new Planet(0.8,   1, scene),
+  new Planet(0.8,   1, scene),
+  new Planet(0.8,   1, scene),
 ];
 
 _ = bodies[1]; _.velocity.z = -0.10; _.position.x = 25; _.position.y =  7;
