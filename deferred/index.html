@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>Deferred</title>
+<script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+<style>
+img
+{
+  width: 400px
+  height: 300px
+}
+</style>
+</head>
+<body>
+<img id='captcha'/><br/>
+<input type='text' id='captcha_code'/>
+<button id="ok">OK</button>
+<script>
+const auth = () => {
+  buttonclick = $.Deferred()
+  $('#ok').click(buttonclick.resolve)
+
+  $.getJSON({
+    url: 'https://www.dais.unive.it/~cosmo/teaching/esercitazione3/captcha.php?getIdentifier', 
+    dataType: "jsonp",
+  }).then(response => {
+    return $.getJSON({
+      url: `https://www.dais.unive.it/~cosmo/teaching/esercitazione3/captcha.php?getImage&id=${response.id}`,
+      dataType: "jsonp",
+    })
+  }).then(response => {
+    $('#captcha').attr('src', `http://www.dais.unive.it/~cosmo/teaching/esercitazione3/${response.url}`)
+    return buttonclick.promise().then(_ => response)
+  }).then(response => {
+    const code = $('#captcha_code').val()
+    return $.getJSON({
+      url: `https://www.dais.unive.it/~cosmo/teaching/esercitazione3/captcha.php?sendCode&id=${response.id}&code=${code}`,
+      dataType: "jsonp",
+    })
+  }).done(response => {
+    if (response.auth) {
+      $('body *').remove()
+      $('body').append('Successfully authenticated!')
+    } else {
+      auth()
+    }
+  }).fail(error => {
+    alert(error)
+  })
+}
+auth();
+</script>
+</body>
